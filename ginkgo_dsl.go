@@ -201,6 +201,12 @@ type Benchmarker interface {
 //
 //	ginkgo bootstrap
 func RunSpecs(t GinkgoTestingT, description string) bool {
+	if _, ok := os.LookupEnv("GINKGO_LIST"); ok {
+		writer := GinkgoWriter.(*writer.Writer)
+		writer.SetStream(config.DefaultReporterConfig.Verbose)
+		global.Suite.List(t, description, writer)
+		return true
+	}
 	specReporters := []Reporter{buildDefaultReporter()}
 	if config.DefaultReporterConfig.ReportFile != "" {
 		reportFile := config.DefaultReporterConfig.ReportFile

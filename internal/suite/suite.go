@@ -1,6 +1,7 @@
 package suite
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
@@ -53,6 +54,29 @@ func New(failer *failer.Failer) *Suite {
 		failer:                 failer,
 		containerIndex:         1,
 		deferredContainerNodes: []deferredContainerNode{},
+	}
+}
+
+func (suite *Suite) List(t ginkgoTestingT, description string, writer writer.WriterInterface) {
+	suite.expandTopLevelNodes = true
+	for _, deferredNode := range suite.deferredContainerNodes {
+		suite.PushContainerNode(deferredNode.text, deferredNode.body, deferredNode.flag, deferredNode.codeLocation)
+	}
+
+	subjectNodes := []leafnodes.SubjectNode{}
+	suite.topLevelContainer.BackPropagateProgrammaticFocus()
+
+	collatedNodes := suite.topLevelContainer.Collate()
+	for i, n := range collatedNodes {
+		fmt.Fprintf(writer, "---- collated node %d\n", i)
+		for _, c := range n.Containers {
+			fmt.Fprintln(writer, c.Text(), c.CodeLocation().String())
+		}
+		fmt.Fprintln(writer, n.Subject.Text(), n.Subject.CodeLocation().String())
+	}
+
+	for _, n := range subjectNodes {
+		fmt.Fprintln(writer, n.CodeLocation().String())
 	}
 }
 
